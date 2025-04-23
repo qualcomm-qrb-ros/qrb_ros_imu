@@ -18,14 +18,14 @@ We provide two ways to use this package.
 <summary>Docker</summary>
 
 #### Setup
-1. Please follow this [steps](https://github.com/quic-qrb-ros/qrb_ros_docker?tab=readme-ov-file#quickstart) to setup docker env.
+1. Please follow this [steps](https://github.com/qualcomm-qrb-ros/qrb_ros_docker?tab=readme-ov-file#quickstart) to setup docker env.
 2. Download qrb_ros_imu and dependencies
     ```bash
     cd ${QRB_ROS_WS}/src
 
-    git clone https://github.com/quic-qrb-ros/lib_mem_dmabuf.git
-    git clone https://github.com/quic-qrb-ros/qrb_ros_imu.git
-    git clone https://github.com/quic-qrb-ros/qrb_ros_transport.git
+    git clone https://github.com/qualcomm-qrb-ros/lib_mem_dmabuf.git
+    git clone https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git
+    git clone https://github.com/qualcomm-qrb-ros/qrb_ros_transport.git
     ```
 
 #### Build
@@ -48,13 +48,13 @@ ros2 run qrb_ros_imu imu_node
 <summary>QIRP-SDK</summary>
 
 #### Setup
-1. Please follow this [steps](https://quic-qrb-ros.github.io/getting_started/index.html) to setup qirp-sdk env.
+1. Please follow this [steps](https://qualcomm-qrb-ros.github.io/getting_started/index.html) to setup qirp-sdk env.
 2. Download qrb_ros_imu and dependencies
     ```bash
     mkdir -p <qirp_decompressed_workspace>/qirp-sdk/ros_ws
     cd <qirp_decompressed_workspace>/qirp-sdk/ros_ws
 
-    git clone https://github.com/quic-qrb-ros/qrb_ros_imu.git
+    git clone https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git
     ```
 
 #### Build
@@ -96,7 +96,7 @@ ros2 run qrb_ros_imu imu_node
 
 <br>
 
-You can get more details from [here](https://quic-qrb-ros.github.io/main/index.html).
+You can get more details from [here](https://qualcomm-qrb-ros.github.io/main/index.html).
 ## Contributing
 
 We would love to have you as a part of the QRB ROS community. Whether you are helping us fix bugs, proposing new features, improving our documentation, or spreading the word, please refer to our [contribution guidelines](./CONTRIBUTING.md) and [code of conduct](./CODE_OF_CONDUCT.md).
@@ -109,7 +109,7 @@ We would love to have you as a part of the QRB ROS community. Whether you are he
 
 * **Zhanye Lin** - *Initial work* - [zhanlin](https://github.com/quic-zhanlin)
 
-See also the list of [contributors](https://github.com/quic-qrb-ros/qrb_ros_imu/graphs/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/qualcomm-qrb-ros/qrb_ros_imu/graphs/contributors) who participated in this project.
 
 
 ## License
