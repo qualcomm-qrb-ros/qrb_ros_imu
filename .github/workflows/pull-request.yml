@@ -27,7 +27,7 @@ jobs:
           #       echo "Downloading sdk"
           #       .....
           #    fi
-          persist_dir=/srv/gh-runners/quic-qrb-ros
+          persist_dir=/srv/gh-runners/qualcomm-qrb-ros
 
           # quic-yocto uses Kas to build with:
           # export DL_DIR=${persist_dir}/downloads
