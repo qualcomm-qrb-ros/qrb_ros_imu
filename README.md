@@ -30,7 +30,7 @@ We provide two ways to use this package.
 
 #### Build
 ```bash
-colcon build
+colcon build --packages-up-to qrb_ros_imu
 ```
 
 #### Run
@@ -48,7 +48,7 @@ ros2 run qrb_ros_imu imu_node
 <summary>QIRP-SDK</summary>
 
 #### Setup
-1. Please follow this [steps](https://qualcomm-qrb-ros.github.io/getting_started/index.html) to setup qirp-sdk env.
+1. Please follow this [steps](https://qualcomm-qrb-ros.github.io/main/getting_started/environment_setup.html) to setup qirp-sdk env.
 2. Download qrb_ros_imu and dependencies
     ```bash
     mkdir -p <qirp_decompressed_workspace>/qirp-sdk/ros_ws
