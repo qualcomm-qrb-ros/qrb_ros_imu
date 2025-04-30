@@ -10,14 +10,52 @@ env:
   QCOM_SELECTED_BSP: custom
 
 jobs:
+
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      machine: ${{ steps.parse-config.outputs.machine }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y python3-pip
+          sudo pip3 install yq
+
+      - name: Parse config.yaml
+        id: parse-config
+        run: |
+          # Find config.yaml in case there're multiple packages
+          all_machines=()
+          config_files=$(find . -name "config.yaml")
+
+          if [ -z "$config_files" ];then
+            # If no config file, all platforms are supported.
+            all_machines=("\"qcs6490-rb3gen2-vision-kit\"" "\"qcs9075-rb8-core-kit\"" "\"qcs8300-ride-sx\"")
+          else
+            for conf_file in $config_files;do
+              machines=$(yq '.packages[].machines[].name' ${conf_file})
+              all_machines+=("$machines")
+            done
+          fi
+
+          unique_machines=$(printf '%s\n' "${all_machines[@]}" | sort | uniq)
+          echo "Machines:" "${unique_machines[@]}"
+
+          all_machines_json=$(printf '%s\n' "${unique_machines[@]}" | jq -s -c)
+
+          echo "machine=${all_machines_json}" >> $GITHUB_OUTPUT
+
   build:
+    needs: generate-matrix
     runs-on: [self-hosted, x86]
     timeout-minutes: 720
     strategy:
       fail-fast: false
       matrix:
-        machine:
-          - qcs6490-rb3gen2-vision-kit
+        machine: ${{ fromJson(needs.generate-matrix.outputs.machine) }}
         distro:
           - qcom-robotics-ros2-jazzy
     steps:
@@ -62,11 +100,33 @@ jobs:
           export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
           export PYTHONPATH=${PYTHONPATH}:${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
 
-          colcon build --continue-on-error --cmake-args \
-            -DCMAKE_TOOLCHAIN_FILE=${OE_CMAKE_TOOLCHAIN_FILE} \
-            -DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
-            -DPython3_NumPy_INCLUDE_DIR=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
-            -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
+          # Get ROS package list
+          packages=$(colcon list)
+
+          # Get ignore list
+          ignore_list=()
+
+          while read -r package _ _; do
+            cd ${{ github.workspace }}/ros_ws/${{ github.event.repository.name }}/.github/
+
+            if [ -f ./config.yaml ]; then
+              machine_supported=$(yq '.packages[] | select(.name == "'"${package}"'") | .machines[] | select(.name == "'"${MACHINE}"'")' ./config.yaml)
+              if [ -z "${machine_supported}" ];then
+                ignore_list+=("${package}")
+              fi
+            else
+              echo "config.yaml does not exist!"
+              ignore_list=()
+            fi
+          done <<< "$packages"
+          echo "Ignore list:" "${ignore_list[@]}"
+
+          cd ${WORKSPACE}
+          colcon build --packages-ignore "${ignore_list[@]}" --merge-install --cmake-args \
+            -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
+            -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
+            -DPYTHON_SOABI=cpython-312-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX="$(pwd)/install" \
+            -DCMAKE_PREFIX_PATH="$(pwd)/install/share" \
             -DBUILD_TESTING=OFF
 
       - name: Publish artifacts
@@ -75,7 +135,7 @@ jobs:
           build_dir=${PERSIST_DIR}/builds/${GITHUB_RUN_ID}
           mkdir -p $build_dir
 
-          tar -cvf ${build_dir}/artifacts.tar ${WORKSPACE}/install ${WORKSPACE}/build ${WORKSPACE}/log
+          tar -cvf ${build_dir}/${{ github.event.repository.name }}-${MACHINE}-${DISTRO}-${QCOM_SELECTED_BSP}-artifacts.tar --transform "s|^${WORKSPACE}/||" -C ${WORKSPACE} install build log
 
           # Instruct our file server to make these files available for download
           url="https://quic-qrt-ros-fileserver-1029608027416.us-central1.run.app/${GITHUB_RUN_ID}/"
