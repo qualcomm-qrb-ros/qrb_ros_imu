@@ -87,7 +87,6 @@ ros2 run qrb_ros_imu imu_node
 #### Run
 ```bash
 (ssh) export HOME=/home
-(ssh) setenforce 0
 (ssh) source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh
 (ssh) ros2 run qrb_ros_imu imu_node
 ```
