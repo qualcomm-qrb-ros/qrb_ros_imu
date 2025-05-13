@@ -12,6 +12,9 @@
 > This document 's build & run is the latest.
 > If it conflict with the online document, please follow this.
 
+> **Note：**
+> This package only support in RB3 GEN2 hardware.
+
 We provide two ways to use this package.
 
 <details>
