@@ -63,15 +63,7 @@ ros2 run qrb_ros_imu imu_node
 #### Build
 1. Build the project
     ```bash
-    export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
-    export PYTHONPATH=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
-
-    colcon build --continue-on-error --cmake-args \
-      -DCMAKE_TOOLCHAIN_FILE=${OE_CMAKE_TOOLCHAIN_FILE} \
-      -DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
-      -DPython3_NumPy_INCLUDE_DIR=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
-      -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
-      -DBUILD_TESTING=OFF
+    colcon build --continue-on-error --cmake-args ${CMAKE_ARGS}
     ```
 2. Install the package
     ```bash
@@ -82,15 +74,14 @@ ros2 run qrb_ros_imu imu_node
     tar -czvf qrb_sensor_client.tar.gz include lib share
     scp qrb_sensor_client.tar.gz root@[ip-addr]:/home/
     ssh root@[ip-addr]
-    (ssh) mount -o remount rw /
+    (ssh) mount -o remount rw /usr
     (ssh) tar --no-overwrite-dir --no-same-owner -zxf /home/qrb_ros_imu.tar.gz -C /usr/
     (ssh) tar --no-overwrite-dir --no-same-owner -zxf /home/qrb_sensor_client.tar.gz -C /usr/
     ```
 
 #### Run
 ```bash
-(ssh) export HOME=/home
-(ssh) source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh
+(ssh) source /usr/share/qirp-setup.sh
 (ssh) ros2 run qrb_ros_imu imu_node
 ```
 
