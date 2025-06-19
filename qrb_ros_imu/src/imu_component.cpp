@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #include "qrb_ros_imu/imu_component.hpp"
@@ -37,12 +37,12 @@ ImuComponent::~ImuComponent()
   if (thread_publish_msg_) {
     thread_publish_msg_->join();
   }
-  sensor_client_.DisconnectServer();
+  sensor_client_.disconnect_server();
 }
 
 bool ImuComponent::init()
 {
-  if (!sensor_client_.CreateConnection()) {
+  if (!sensor_client_.create_connection()) {
     RCLCPP_ERROR(this->get_logger(), "imu client connect failed.");
     timer_ = this->create_wall_timer(
         std::chrono::seconds(RETRY_INTERVAL), std::bind(&ImuComponent::retry_connection, this));
@@ -69,7 +69,7 @@ void ImuComponent::connect_success()
 void ImuComponent::retry_connection()
 {
   RCLCPP_INFO(this->get_logger(), "retry to connect");
-  bool success = sensor_client_.CreateConnection();
+  bool success = sensor_client_.create_connection();
   if (success && !running_) {
     connect_success();
     this->timer_->cancel();
@@ -98,7 +98,7 @@ void ImuComponent::publish_msg()
   while (running_) {
     pack_num = 0;
     this->get_parameter("debug", debug_);
-    if (!sensor_client_.GetImuData(&accel_ptr, &gyro_ptr, &pack_num)) {
+    if (!sensor_client_.get_imu_data(&accel_ptr, &gyro_ptr, &pack_num)) {
       RCLCPP_DEBUG(this->get_logger(), "get imu data failed");
       if (!debug_) {
         RCLCPP_DEBUG(this->get_logger(), "thread will sleep 2 ms");
