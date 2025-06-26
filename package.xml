@@ -2,12 +2,12 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>qrb_sensor_client</name>
-  <version>1.0.0</version>
+  <version>1.3.0</version>
   <description>QRB Sensor Client library</description>
   <maintainer email="quic_zhanlin@quicinc.com">Zhanye Lin</maintainer>
   <license>BSD-3-Clause-Clear</license>
 
-  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
