@@ -21,12 +21,12 @@ int IMUSensor::get_available_sensors_nums(char * sensor, int index, int last_cou
   // if index == PACK_NUM_MAX - 1 means come to the buffer bottom, need reset it
   // to the buffer top.
   if (index == PACK_NUM_MAX - 1) {
-    index = 0;
+    return 1;
   }
 
   while (index < PACK_NUM_MAX) {
     sensors_event_t * next_data = (sensors_event_t *)sensor + index;
-    if (next_data->reserved0 == 0 || next_data->reserved0 <= last_count) {
+    if (next_data->reserved0 == 0 || next_data->reserved0 < last_count) {
       break;
     }
     count++;
@@ -69,8 +69,11 @@ bool IMUSensor::get_data(sensors_event_t **& accel_ptr,
       return false;
     }
   }
-  sensors_event_t * data_accel = (sensors_event_t *)accel_buffer_ptr_ + count_accel_;
-  sensors_event_t * data_gyro = (sensors_event_t *)gyro_buffer_ptr_ + count_gyro_;
+  auto accel_index = (count_accel_ % PACK_NUM_MAX);
+  auto gyro_index = (count_gyro_ % PACK_NUM_MAX);
+
+  sensors_event_t * data_accel = (sensors_event_t *)accel_buffer_ptr_ + accel_index;
+  sensors_event_t * data_gyro = (sensors_event_t *)gyro_buffer_ptr_ + gyro_index;
 
   if (!is_accel_gyro_offset_inited_) {
     int gyro_offset = get_offset_of_data(gyro_buffer_ptr_, data_accel->timestamp);
@@ -91,12 +94,11 @@ bool IMUSensor::get_data(sensors_event_t **& accel_ptr,
     is_accel_gyro_offset_inited_ = true;
   } else {
     int accel_available_nums =
-        get_available_sensors_nums(accel_buffer_ptr_, count_accel_, data_accel->reserved0);
+        get_available_sensors_nums(accel_buffer_ptr_, accel_index, count_accel_);
     if (accel_available_nums <= 0) {
       return false;
     }
-    int gyro_available_nums =
-        get_available_sensors_nums(gyro_buffer_ptr_, count_gyro_, data_gyro->reserved0);
+    int gyro_available_nums = get_available_sensors_nums(gyro_buffer_ptr_, gyro_index, count_gyro_);
     if (gyro_available_nums <= 0) {
       return false;
     }
@@ -104,11 +106,11 @@ bool IMUSensor::get_data(sensors_event_t **& accel_ptr,
         accel_available_nums < gyro_available_nums ? accel_available_nums : gyro_available_nums;
   }
   // update return value
-  *accel_ptr = (sensors_event_t *)accel_buffer_ptr_ + (count_accel_ % PACK_NUM_MAX);
-  *gyro_ptr = (sensors_event_t *)gyro_buffer_ptr_ + (count_gyro_ % PACK_NUM_MAX);
+  *accel_ptr = (sensors_event_t *)accel_buffer_ptr_ + accel_index;
+  *gyro_ptr = (sensors_event_t *)gyro_buffer_ptr_ + gyro_index;
   // update current value
-  count_accel_ = (count_accel_ + **sample_count) % PACK_NUM_MAX;
-  count_gyro_ = (count_accel_ + accel_gyro_offset_ + PACK_NUM_MAX) % PACK_NUM_MAX;
+  count_accel_ = count_accel_ + **sample_count;
+  count_gyro_ = count_accel_ + accel_gyro_offset_;
   return true;
 }
 
