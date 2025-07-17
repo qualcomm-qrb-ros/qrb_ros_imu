@@ -13,4 +13,4 @@ jobs:
     uses: qualcomm-qrb-ros/.github/.github/workflows/ubuntu-build.yml@ubuntu-build
     with:
       # QRB ROS dependency
-      dependencies: "qualcomm-qrb-ros/qrb_ros_transport"
+      dependencies: "qualcomm-qrb-ros/qrb_ros_transport qualcomm-qrb-ros/lib_mem_dmabuf"
