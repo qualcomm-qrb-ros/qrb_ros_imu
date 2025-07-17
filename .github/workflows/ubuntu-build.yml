@@ -10,7 +10,7 @@ env:
 
 jobs:
   ros-build:
-    uses: qualcomm-qrb-ros/.github/.github/workflows/ubuntu-build-call.yml@ubuntu-build
+    uses: qualcomm-qrb-ros/.github/.github/workflows/ubuntu-build.yml@ubuntu-build
     with:
       # QRB ROS dependency
       dependencies: "qualcomm-qrb-ros/qrb_ros_transport"
