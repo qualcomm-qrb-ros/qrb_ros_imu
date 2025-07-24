@@ -1,0 +1,170 @@
+name: Build and deploy SDK
+run-name: Build and deploy SDK by ${{ github.event_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      machine:
+        description: "Specifies the target device for which the image is built."
+        required: true
+        default: '["qcs6490-rb3gen2-vision-kit", "qcs9075-rb8-core-kit", "qcs8300-ride-sx"]'
+      distro:
+        description: "The short name of the distribution."
+        required: true
+        default: '["qcom-robotics-ros2-jazzy", "qcom-robotics-ros2-humble"]'
+      build_override:
+        description: "QCOM build override"
+        required: false
+        type: choice
+        default: custom
+        options:
+          - custom
+          - base
+      manifest:
+        description: "Manually setting manifest.xml"
+        required: false
+        type: string
+        default: 'qcom-6.6.65-QLI.1.4-Ver.1.0_robotics-product-sdk-1.0.xml'
+      custom_build_cmd:
+          description: "Manually setting build commands"
+          required: false
+          type: string
+          default: ''
+      deploy_sdk:
+        description: "Deploy generated SDK to persistent directory"
+        required: false
+        type: boolean
+        default: true
+
+env:
+  PERSIST_DIR: /efs/gh-runners/qualcomm-qrb-ros
+  DL_DIR: /efs/gh-runners/qualcomm-qrb-ros/downloads
+
+  DEPLOY_SDK: ${{ github.event.inputs.deploy_sdk || 'true' }}
+  QCOM_SELECTED_BSP: ${{inputs.build_override || 'custom'}}
+  MANIFEST: ${{ github.event.inputs.manifest }}
+
+jobs:
+  build-sdk:
+    runs-on: [self-hosted, qcom-u2404, amd64]
+    timeout-minutes: 7200
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: ${{ fromJSON(github.event.inputs.machine) }}
+        # machine:
+          # - qcs6490-rb3gen2-vision-kit
+          # - qcs9075-rb8-core-kit
+          # - qcs8300-ride-sx
+        distro: ${{ fromJSON(github.event.inputs.distro) }}
+        # distro:
+        #   - qcom-robotics-ros2-jazzy
+
+    steps:
+      - name: System Check
+        run: |
+         sleep 5m
+      - name: Check and create work directories
+        continue-on-error: true
+        run: |
+          if [ -e ${PERSIST_DIR} ] && [ -r ${PERSIST_DIR} ] && [ -w ${PERSIST_DIR} ];then
+            if [ ! -d ${DL_DIR} ];then
+              echo "Creating ${DL_DIR}!"
+              mkdir -p ${DL_DIR}
+            fi
+
+            echo "ls ${PERSIST_DIR}:"
+            ls ${PERSIST_DIR}/* -al
+          else
+            echo "DEPLOY_SDK=false" >> $GITHUB_ENV
+            echo "${PERSIST_DIR} is not available. Set DEPLOY_SDK=false."
+          fi
+
+      - name: Set enviroment variables
+        run: |
+          echo "MACHINE=${{ matrix.machine }}" >> $GITHUB_ENV
+          echo "DISTRO=${{ matrix.distro }}" >> $GITHUB_ENV
+
+      - name: Sync source tree
+        id: sync_src
+        run: |
+          # Get latest version
+          git clone https://github.com/qualcomm-linux/qcom-manifest.git -b qcom-linux-scarthgap
+
+          latest_manifest=$(find ./qcom-manifest -type f -name 'qcom-[0-9]*.[0-9]*.[0-9]*-QLI.[0-9]*.[0-9]*-Ver.[0-9]*.[0-9]*_robotics-product-sdk-[0-9]*.[0-9]*.xml' | awk -F'./qcom-manifest/' '{print $2}' | sort -V | tail -n 1)
+          if [ -z "${latest_manifest}" ];then
+            latest_manifest=${MANIFEST}
+          fi
+          echo "latest_manifest: ${latest_manifest}."
+
+          echo "manifest=${latest_manifest}" >> "$GITHUB_OUTPUT"
+
+          # Temporary configuration since git.yoctoproject.org is unavailable.
+          git config --global url.https://github.com/yoctoproject/poky.insteadOf https://git.yoctoproject.org/poky
+          git config --global url.https://github.com/distro-core-curated-mirrors/meta-selinux.insteadOf https://git.yoctoproject.org/meta-selinux
+          git config --global url.https://github.com/lmp-mirrors/meta-virtualization.insteadOf https://git.yoctoproject.org/meta-virtualization
+          git config --global url.https://github.com/lmp-mirrors/meta-security.insteadOf https://git.yoctoproject.org/meta-security
+          git config --global url.https://git.codelinaro.org/clo/ype/external/yoctoproject.org/meta-tensorflow.insteadOf https://git.yoctoproject.org/meta-tensorflow
+          
+          repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-scarthgap -m ${latest_manifest}
+          repo sync -c -j8
+          
+          git config --global --unset url.https://github.com/yoctoproject/poky.insteadOf
+          git config --global --unset url.https://github.com/distro-core-curated-mirrors/meta-selinux.insteadOf
+          git config --global --unset url.https://github.com/lmp-mirrors/meta-virtualization.insteadOf
+          git config --global --unset url.https://github.com/lmp-mirrors/meta-security.insteadOf
+          git config --global --unset url.https://git.codelinaro.org/clo/ype/external/yoctoproject.org/meta-tensorflow.insteadOf
+          
+      - name: Custom build
+        if: ${{ github.event.inputs.custom_build_cmd != '' }}
+        run: |
+          if [ -e ${DL_DIR} ] && [ -r ${DL_DIR} ] && [ -w ${DL_DIR} ];then
+            ln -s ${DL_DIR} ./downloads
+          fi
+          # Todo: no machine and distro
+          source setup-robotics-environment
+          ${{ github.event.inputs.custom_build_cmd }}
+
+      - name: Full compilation
+        env:
+          BB_NUMBER_THREADS: 14
+        if: ${{ github.event.inputs.custom_build_cmd == '' }}
+        run: |
+          set -x
+          if [ -e ${DL_DIR} ] && [ -r ${DL_DIR} ] && [ -w ${DL_DIR} ];then
+            ln -s ${DL_DIR} ./downloads
+          fi
+          
+          # Temporay patch
+          sed -i '/apply_poky_patches &> \/dev\/null/d' setup-environment
+          sed -i '/poky:/,/patch_url: "https:\/\/git.yoctoproject.org\/poky\/patch\/meta\/files\/common-licenses\/BSD?id=4bda50f28919d62410feabae530e6f7186812938"/d'  ./layers/meta-qcom-robotics/patches/patches.yaml
+          cp ./layers/poky/meta/files/common-licenses/BSD-3-Clause-Clear ./layers/poky/meta/files/common-licenses/BSD
+          # Temporay patch
+
+          source setup-robotics-environment build-${MACHINE}-${DISTRO}-${QCOM_SELECTED_BSP}
+
+          # Temporay patch
+          echo -e '\ndo_configure[network] = "1"' >> "${{ github.workspace }}"/layers/meta-ros/meta-ros2-jazzy/recipes-bbappends/rosbag2-storage-mcap/mcap-vendor_0.26.5-1.bbappend
+          # Temporay patch
+
+          bitbake qcom-robotics-full-image
+          bitbake qcom-robotics-full-image -c populate_sdk
+
+      - name: Deploy SDK
+        if: env.DEPLOY_SDK
+        run: |
+          export TARGET_DIR="${PERSIST_DIR}/${MACHINE}-${DISTRO}-${QCOM_SELECTED_BSP}"
+          manifest_name=$(basename ${{ steps.sync_src.outputs.manifest }} .xml)
+          export SDK_DIR="${TARGET_DIR}"/${manifest_name}/
+          echo "manifest_name=${manifest_name}, SDK_DIR=${SDK_DIR}"
+          set -x
+          set +e
+          if [ ! -d ${SDK_DIR} ];then
+            echo "Creating ${SDK_DIR}"
+            mkdir -p ${SDK_DIR}/
+          fi
+
+          for file in "${{ github.workspace }}/build-${MACHINE}-${DISTRO}-${QCOM_SELECTED_BSP}/tmp-glibc/deploy/sdk/"*.sh
+          do
+            cp -rf ${file} ${SDK_DIR}
+          done
