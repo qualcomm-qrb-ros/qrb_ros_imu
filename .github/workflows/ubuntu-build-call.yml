@@ -1,0 +1,63 @@
+name: Build QRB ROS packages on Ubuntu
+
+on:
+  workflow_call:
+    inputs:
+      dependencies:
+        description: 'List of repositories to checkout, e.g. "owner/repo1 owner/repo2"'
+        type: string
+        required: false
+      colcon_args:
+        description: 'Colcon build arguments, e.g. --cmake-args -DCMAKE_BUILD_TYPE=Release'
+        type: string
+        required: false
+      ros-distro:
+        description: 'ROS2 distribution to use, e.g. humble'
+        type: string
+        required: false
+        default: jazzy
+      apt-packages:
+        description: 'List of apt packages to install, e.g. "python3-pip python3-rosdep"'
+        type: string
+        required: false
+
+env:
+    ROS_WS: ${{ github.workspace }}/ros2_ws/
+    ROS_SRC: ${{ github.workspace }}/ros2_ws/src
+
+jobs:
+  ros-build:
+    runs-on: [ubuntu-24.04-arm]
+    container: ros:jazzy
+    steps:
+      - name: Update and install extra packages
+        run: |
+          # Add QCOM PPA
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+
+          sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-noble-ppa
+          sudo add-apt-repository ppa:ubuntu-qcom-iot/qirp
+
+          sudo apt update -y && sudo apt upgrade -y
+          sudo apt install -y ${{ inputs.apt-packages }}
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.ROS_SRC }}/${{ github.event.repository.name }}
+      - name: Checkout dependency
+        run: |
+          for repo in ${{ inputs.dependencies }}; do
+            git clone https://github.com/${repo}.git ${ROS_SRC}/${repo#*/} || true
+          done
+      - name: Check ROS dependency
+        run: |
+          rosdep update
+          sudo rosdep install -y --rosdistro ${{ inputs.ros-distro }} --from-paths ${ROS_SRC} --ignore-src
+      - name: Build ROS packages
+        shell: bash
+        run: |
+          cd ${ROS_WS}
+          source /opt/ros/jazzy/setup.sh
+          colcon build ${{ inputs.colcon_args }}
+
