@@ -50,7 +50,7 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-u2404, amd64, amd64-8x]
     timeout-minutes: 720
     strategy:
       fail-fast: false
