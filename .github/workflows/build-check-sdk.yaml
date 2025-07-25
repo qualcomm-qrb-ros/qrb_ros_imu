@@ -61,7 +61,7 @@ jobs:
     steps:
       - name: Set enviroment variables
         run: |
-          sudo pip3 install yq
+          sudo apt install yq -y
           echo "MACHINE=${{ matrix.machine }}" >> $GITHUB_ENV
           echo "DISTRO=${{ matrix.distro }}" >> $GITHUB_ENV
 
