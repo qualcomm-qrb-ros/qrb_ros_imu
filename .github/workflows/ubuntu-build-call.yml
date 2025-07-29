@@ -27,7 +27,8 @@ env:
 
 jobs:
   ros-build:
-    runs-on: [ubuntu-24.04-arm]
+    #runs-on: [ubuntu-24.04-arm]
+    runs-on: [self-hosted, qcom-u2404, arm64, arm64-8x]
     container: ros:jazzy
     steps:
       - name: Update and install extra packages
