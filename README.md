@@ -240,25 +240,27 @@ sudo systemctl restart sensor-service
 
 ## 👨‍💻 Build from source
 
-Install dependencies
+### Dependencies
+Install dependencies `ros-dev-tools`:
 
 ```bash
-sudo apt install ros-jazzy-qrb-ros-transport-imu-type
+sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-noble-ppa
+sudo add-apt-repository ppa:ubuntu-qcom-iot/qirp
+sudo apt update
+
+sudo apt install ros-jazzy-qrb-ros-transport-imu-type \
+  ros-dev-tools
 ```
 
+### Build
 Download the source code and build with colcon
+
 ```bash
 source /opt/ros/jazzy/setup.bash
 git clone https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git
 colcon build
 ```
 
-Run and debug
-
-```bash
-source install/setup.bash
-ros2 run qrb_ros_imu imu_node
-```
 
 ## 🤝 Contributing
 
