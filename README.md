@@ -157,10 +157,17 @@ sudo apt update
 Install Debian package:
 
 ```bash
-sudo apt install ros-jazzy-qrb-ros-imu
+sudo apt install ros-jazzy-qrb-ros-imu qcom-sensors-service
 ```
 
 ## 🚀 Usage
+
+### Start the sensor-service
+
+```bash
+sudo systemctl enable sensor-service
+sudo systemctl start sensor-service
+```
 
 ### Start the imu node
 
@@ -179,6 +186,8 @@ The output for these commands:
 [INFO] [SensorClient]: recvmsg success
 ...
 ```
+> [!Notice]
+> If you get imu client connect failed log, please check FAQs section.
 
 Then you can check ROS topics with the topic `/imu`.
 
@@ -286,6 +295,7 @@ Thanks to all our contributors who have helped make this project better!
 <summary><strong>Why do I see the error: "IMU client connect failed"?</strong></summary>
 
 - Please ensure that the IMU frame rate configured in <code>/etc/sensors_info.conf</code> is set within the range of <strong>0–500</strong>.
+- If the sensor frame rate is set correctly but it still fails to start, please try restarting the device.
 </details>
 
 <details>
