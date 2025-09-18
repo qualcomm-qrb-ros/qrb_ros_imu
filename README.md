@@ -157,7 +157,7 @@ sudo apt update
 Install Debian package:
 
 ```bash
-sudo apt install ros-jazzy-qrb-ros-imu qcom-sensors-service
+sudo apt install ros-jazzy-qrb-ros-imu qcom-sensors*
 ```
 
 ## 🚀 Usage
