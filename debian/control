@@ -8,5 +8,5 @@ Standards-Version: 3.9.2
 
 Package: ros-jazzy-qrb-sensor-client
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, 
+Depends: ${shlibs:Depends}, ${misc:Depends}, qcom-sensors-service, qcom-sensors-services, qcom-sensors-core
 Description: QRB Sensor Client library
