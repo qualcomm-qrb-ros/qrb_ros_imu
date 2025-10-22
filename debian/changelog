@@ -1,3 +1,9 @@
+ros-jazzy-qrb-ros-imu (1.3.0.1) noble; urgency=high
+
+  * Update the debian rules for lack of dependency.
+
+ -- Zhanye Lin <zhanlin@qti.qualcomm.com>  Mon, 20 Oct 2025 10:03:27 +0000
+
 ros-jazzy-qrb-ros-imu (1.3.0) noble; urgency=high
 
   * Adapt to sensor-service version 2.0.0.
