@@ -1,0 +1,11 @@
+packages:
+  - name: qrb_ros_imu
+    machines:
+      - name: qcs6490-rb3gen2-vision-kit
+        description: "qcs6490 rb3gen2 vision kit"
+        parameters: null
+  - name: qrb_sensor_client
+    machines:
+      - name: qcs6490-rb3gen2-vision-kit
+        description: "qcs6490 rb3gen2 vision kit"
+        parameters: null
